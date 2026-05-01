@@ -1,28 +1,32 @@
 // Author: Apostolos Chalis 2026 <achalis@csd.auth.gr>
+// Co-Author: Ioannis Michadasis
 
 #include "ui_MainWindow.h"
 #include "MainWindow.hpp"
-#include "ui_MainWindow.h"
 
-#include <QListView>
-#include <QListView>
 #include <QDebug>
+#include <QStandardItemModel>
+#include <QStandardItem>
+#include <QIcon>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent), ui(new Ui::MainWindow) {
 	
 	ui->setupUi(this);
 
-	university_model = new QStringListModel(this);
-	department_model = new QStringListModel(this);
+	university_model = new QStandardItemModel(this);
+	department_model = new QStandardItemModel(this);
 
-	QStringList universities = {
-		"Aristotle University of Thessaloniki", 
-		"University of Western Macedonia", 
-		"University of Macedonia"
+	QList<QPair<QString, QString>> universities = {
+    	{"Aristotle University of Thessaloniki", ":/auth_logo.png"},
+    	{"University of Western Macedonia",      ":/uowm_logo.png"},
+    	{"University of Macedonia",              ":/uom_logo.png"}
 	};
 
-	university_model->setStringList(universities);
+	for (const auto &[name, iconPath] : universities) {
+    	QStandardItem *item = new QStandardItem(QIcon(iconPath), name);
+    	university_model->appendRow(item);
+	}
 
 	ui->listView->setModel(university_model);
 	showing_universities = true;
@@ -55,7 +59,10 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
 						<< "Economics";
 		}
 
-		department_model->setStringList(departments);
+		department_model->clear();
+		for (const QString &dept : departments) {
+    		department_model->appendRow(new QStandardItem(dept));
+		}
 		ui->listView->setModel(department_model);
 		showing_universities = false; 
 	} else {

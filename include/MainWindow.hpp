@@ -1,9 +1,10 @@
 // Author: Apostolos Chalis 2026 <achalis@csd.auth.gr>
+// Co-Author: Ioannis Michadasis
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
 #include <QMainWindow>
-#include <QStringListModel> 
+#include <QStandardItemModel>
 #include <QModelIndex>
 
 QT_BEGIN_NAMESPACE
@@ -24,8 +25,8 @@ class MainWindow : public QMainWindow
 	private:
     		Ui::MainWindow *ui;
 
-		QStringListModel *university_model; 
-		QStringListModel *department_model; 
+		QStandardItemModel *university_model;
+		QStandardItemModel *department_model;
 
 		bool showing_universities;
 };
