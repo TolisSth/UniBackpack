@@ -1,0 +1,15 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource prefix="/">
+    
+    <!-- Icons -->
+    <file>icons/auth_logo.png</file>
+    <file>icons/uowm_logo.png</file>
+    <file>icons/uom_logo.png</file>
+
+    <!-- Lists -->
+    <file>lists/University of Western Macedonia/Informatics/pacman_list.txt</file>
+    <file>lists/University of Western Macedonia/Informatics/apt_list.txt</file>
+    
+  </qresource>
+</RCC>

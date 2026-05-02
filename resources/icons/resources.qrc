@@ -1,8 +1,0 @@
-<!DOCTYPE RCC>
-<RCC version="1.0">
-  <qresource prefix="/icons">
-    <file>auth_logo.png</file>
-    <file>uowm_logo.png</file>
-    <file>uom_logo.png</file>
-  </qresource>
-</RCC>

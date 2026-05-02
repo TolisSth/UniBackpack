@@ -13,13 +13,17 @@ class Downloader : public QObject {
 	private:
 		QString name_of_university;
 		QString name_of_department;
+		QString current_university; // this should not be like that (refactor after 1.0)
 
 	public:
 		explicit Downloader(const QString &university, const QString &department, QObject *parent = nullptr)
 			: QObject(parent), name_of_university(university), name_of_department(department) {}
 
 		QString check_package_manager();
-		QStringList read_package_list(bool standard_package_manager); 
+		QStringList read_package_list(bool standard_package_manager, QString package_manager); 
+		bool is_in_pacman_repo(const QString &package_name);
+		bool is_in_apt_repo(const QString &package_name);
+
 		void download_via_pacman(const QStringList &list_to_be_downloaded);
 		void download_via_apt(const QStringList &list_to_be_downloaded);
 

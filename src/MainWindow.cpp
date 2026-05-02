@@ -2,8 +2,10 @@
 
 #include "ui_MainWindow.h"
 #include "MainWindow.hpp"
+#include "Downloader.hpp"
 
 #include <QDebug>
+#include <QProcess>
 #include <QStandardItemModel>
 #include <QStandardItem>
 #include <QIcon>
@@ -39,20 +41,20 @@ MainWindow::~MainWindow() {
 
 void MainWindow::on_university_selection(const QModelIndex &index) {
 	if (showing_universities) {
-		QString selectedUni = university_model->data(index, Qt::DisplayRole).toString();
-		qDebug() << "Selected: " << selectedUni;
+		current_university = university_model->data(index, Qt::DisplayRole).toString();
+		qDebug() << "Selected: " << current_university;
 
 		QStringList departments;
 
-		if (selectedUni == "Aristotle University of Thessaloniki") {
+		if (current_university == "Aristotle University of Thessaloniki") {
 			departments << "Back to Universities" 
 						<< "Informatics" 
 						<< "Physics";
-		} else if (selectedUni == "University of Western Macedonia") {
+		} else if (current_university == "University of Western Macedonia") {
 			departments << "Back to Universities" 
 						<< "Informatics" 
 						<< "Mechanical Engineering";
-		} else if (selectedUni == "University of Macedonia") {
+		} else if (current_university == "University of Macedonia") {
 			departments << "Back to Universities" 
 						<< "Applied Informatics" 
 						<< "Economics";
@@ -69,8 +71,24 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
 			ui->listView->setModel(university_model);
 			showing_universities = true;
 		} else {
-			QString selectedDept = department_model->data(index, Qt::DisplayRole).toString();
+			QString selectedDept = department_model->data(index, Qt::DisplayRole).toString();			
+
 			qDebug() << "Installing for department: " << selectedDept;
+			Downloader downloader(current_university, selectedDept);
+			QString package_manager = downloader.check_package_manager();
+
+			if(package_manager != "Unsupported") {
+				QStringList packages_to_download = downloader.read_package_list(true, package_manager);
+
+				if (package_manager == "pacman") {
+					downloader.download_via_pacman(packages_to_download);
+				} else if (package_manager == "apt") {
+					downloader.download_via_apt(packages_to_download);
+				}
+			} else {
+				qDebug() << "No supported package manager found. Cannot proceed with installation.";
+			}
+
 		}
 	}
 }
