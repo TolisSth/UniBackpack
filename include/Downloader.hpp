@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QString>
 #include <QDebug>
+#include <vector> 
 
 class Downloader : public QObject {
 	Q_OBJECT
@@ -18,8 +19,9 @@ class Downloader : public QObject {
 			: QObject(parent), name_of_university(university), name_of_department(department) {}
 
 		QString check_package_manager();
-		void download_pacman();
-		void download_apt();
+		QStringList read_package_list(bool standard_package_manager); 
+		void download_via_pacman(const QStringList &list_to_be_downloaded);
+		void download_via_apt(const QStringList &list_to_be_downloaded);
 
 	signals:
 		void progress_updated(int percentage);
