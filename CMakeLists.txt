@@ -10,16 +10,25 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network)
 set(CMAKE_AUTOMOC ON) # Handles Signals/Slots
 set(CMAKE_AUTORCC ON) # Handles .qrc resource files
 set(CMAKE_AUTOUIC ON) # Handles .ui files
+set(CMAKE_AUTOMOC ON)
 
 set(CMAKE_AUTOUIC_SEARCH_PATHS ui)
 set(RESOURCE_FILES resources/icons/resources.qrc)
 
 add_executable(UniBackpack
+    # Source files
     src/main.cpp
     src/Downloader.cpp
     src/MainWindow.cpp
+
+    # Header files
     include/MainWindow.hpp
+    include/Downloader.hpp
+
+    #UI
     ui/MainWindow.ui
+
+    # Resources
     resources/icons/resources.qrc
 )
 
