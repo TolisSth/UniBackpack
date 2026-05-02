@@ -85,10 +85,7 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
 				} else if (package_manager == "apt") {
 					downloader.download_via_apt(packages_to_download);
 				}
-			} else {
-				qDebug() << "No supported package manager found. Cannot proceed with installation.";
 			}
-
 		}
 	}
 }
