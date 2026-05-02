@@ -5,7 +5,7 @@
 #include <QObject>
 #include <QString>
 #include <QDebug>
-#include <vector> 
+#include <QStringList>
 
 class Downloader : public QObject {
 	Q_OBJECT
