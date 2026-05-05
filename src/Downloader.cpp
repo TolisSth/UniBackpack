@@ -197,10 +197,26 @@ void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
 }
 
 void Downloader::download_via_apt(const QStringList &list_to_be_downloaded) {
-	if (list_to_be_downloaded.isEmpty()) {
-		qDebug() << "Download list is empty\nNothing to do."; 
-		return; 
-	}
+    if (list_to_be_downloaded.isEmpty()) {
+        qDebug() << "Download list is empty\nNothing to do.";
+        return;
+    }
 
-	qDebug() << "Starting to download package list via apt";
+    QProcess *process = new QProcess(this);
+
+    connect(process, &QProcess::readyReadStandardOutput, this, [=]() {
+        emit status_message(process->readAllStandardOutput());
+    });
+
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [=](int exitCode, QProcess::ExitStatus) {
+        emit download_completed(exitCode == 0);
+        process->deleteLater();
+    });
+
+    QStringList args;
+    args << "install" << "-y" << list_to_be_downloaded;
+
+    qDebug() << "Installing via apt:" << list_to_be_downloaded;
+    process->start("apt", args);
 }
