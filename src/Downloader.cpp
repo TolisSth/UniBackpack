@@ -170,8 +170,8 @@ void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
     QMessageBox::warning(
         nullptr,
         "Warning",
-        "lorem ipsum\n"
-        "lorem ipsum"
+        "mpla mpla mpla\n"
+        "Please run 'sudo pacman -Syu'"
     );
 
     if (list_to_be_downloaded.isEmpty()) {
