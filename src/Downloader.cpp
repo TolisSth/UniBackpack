@@ -167,7 +167,7 @@ QStringList Downloader::read_package_list(bool standard_package_manager, QString
 }
 
 void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
-    // Keep warning box logic as requested
+    // there is a problem with pacman -Syu though, so the user should be alerted about that
     QMessageBox::warning(
         nullptr,
         "Warning",
@@ -177,73 +177,58 @@ void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
 
     if (list_to_be_downloaded.isEmpty()) {
         qDebug() << "Download list is empty\nNothing to do.";
-        emit download_completed(false);
         return;
     }
 
-    qDebug() << "Starting to download package list via pacman"; 
-    
-    QProcess *download_process = new QProcess(this);
+	qDebug() << "Starting to download package list via pacman"; 
 
-    connect(download_process, &QProcess::readyReadStandardOutput, this, [=]() {
-        emit status_message(download_process->readAllStandardOutput());
-    });
+	QProcess download_process;
+	QStringList command_structure;
 
-    connect(download_process, &QProcess::readyReadStandardError, this, [=]() {
-        emit status_message(download_process->readAllStandardError());
-    });
+	command_structure << "pacman" << "-S" << "--noconfirm" << "--needed"; 
+	command_structure.append(list_to_be_downloaded);
 
-    connect(download_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, [=](int exitCode, QProcess::ExitStatus) {
-        if (exitCode == 0) {
-            qDebug() << "Package list downloaded via pacman";
-        } else {
-            qDebug() << "Error downloading packages via pacman. Exit code:" << exitCode;
-        }
-        emit download_completed(exitCode == 0);
-        download_process->deleteLater();
-    });
+	qDebug() << "Executing: pkexec" << command_structure.join(" ");
 
-    QStringList command_structure;
-    command_structure << "pacman" << "-S" << "--noconfirm" << "--needed" << list_to_be_downloaded;
+	download_process.start("pkexec", command_structure);
+	download_process.waitForFinished(-1);
 
-    qDebug() << "Executing: pkexec" << command_structure.join(" ");
-    download_process->start("pkexec", command_structure);
+	qDebug() << download_process.readAllStandardOutput();
+
+	if (download_process.exitCode() == 0) {
+		qDebug() << "Package list downloaded via pacman" ;
+	} else {
+		qDebug() << "Error downloading packages via pacman. Exit code:" << download_process.exitCode();
+		qDebug() << "Error output:" << download_process.readAllStandardError();
+	}
 }
 
 void Downloader::download_via_apt(const QStringList &list_to_be_downloaded) {
     if (list_to_be_downloaded.isEmpty()) {
         qDebug() << "Download list is empty\nNothing to do.";
-        emit download_completed(false);
         return;
     }
 
     qDebug() << "Starting to download package list via apt";
 
-    QProcess *download_process = new QProcess(this);
-
-    connect(download_process, &QProcess::readyReadStandardOutput, this, [=]() {
-        emit status_message(download_process->readAllStandardOutput());
-    });
-
-    connect(download_process, &QProcess::readyReadStandardError, this, [=]() {
-        emit status_message(download_process->readAllStandardError());
-    });
-
-    connect(download_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, [=](int exitCode, QProcess::ExitStatus) {
-        if (exitCode == 0) {
-            qDebug() << "Package list downloaded via apt";
-        } else {
-            qDebug() << "Error downloading packages via apt. Exit code:" << exitCode;
-        }
-        emit download_completed(exitCode == 0);
-        download_process->deleteLater();
-    });
-
+    QProcess download_process;
     QStringList command_structure;
-    command_structure << "apt" << "install" << "-y" << list_to_be_downloaded;
+
+    command_structure << "apt" << "install" << "-y";
+    command_structure.append(list_to_be_downloaded);
 
     qDebug() << "Executing: pkexec" << command_structure.join(" ");
-    download_process->start("pkexec", command_structure);
+
+    download_process.start("pkexec", command_structure);
+    while (download_process.waitForReadyRead(-1)) { //To spit out all output from apt
+        qDebug() << download_process.readAllStandardOutput();
+    }
+	download_process.waitForFinished(-1);
+
+    if (download_process.exitCode() == 0) {
+        qDebug() << "Package list downloaded via apt" ;
+    } else {
+        qDebug() << "Error downloading packages via apt. Exit code:" << download_process.exitCode();
+        qDebug() << download_process.readAllStandardError();
+    }
 }
