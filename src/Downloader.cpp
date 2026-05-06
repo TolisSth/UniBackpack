@@ -202,21 +202,26 @@ void Downloader::download_via_apt(const QStringList &list_to_be_downloaded) {
         return;
     }
 
-    QProcess *process = new QProcess(this);
+    qDebug() << "Starting to download package list via apt";
 
-    connect(process, &QProcess::readyReadStandardOutput, this, [=]() {
-        emit status_message(process->readAllStandardOutput());
-    });
+    QProcess download_process;
+    QStringList command_structure;
 
-    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, [=](int exitCode, QProcess::ExitStatus) {
-        emit download_completed(exitCode == 0);
-        process->deleteLater();
-    });
+    command_structure << "apt" << "install" << "-y";
+    command_structure.append(list_to_be_downloaded);
 
-    QStringList args;
-    args << "install" << "-y" << list_to_be_downloaded;
+    qDebug() << "Executing: pkexec" << command_structure.join(" ");
 
-    qDebug() << "Installing via apt:" << list_to_be_downloaded;
-    process->start("apt", args);
+    download_process.start("pkexec", command_structure);
+    while (download_process.waitForReadyRead(-1)) { //To spit out all output from apt
+        qDebug() << download_process.readAllStandardOutput();
+    }
+	download_process.waitForFinished(-1);
+
+    if (download_process.exitCode() == 0) {
+        qDebug() << "Package list downloaded via apt" ;
+    } else {
+        qDebug() << "Error downloading packages via apt. Exit code:" << download_process.exitCode();
+        qDebug() << download_process.readAllStandardError();
+    }
 }
