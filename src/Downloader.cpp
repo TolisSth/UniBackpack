@@ -9,6 +9,7 @@
 #include <QTextStream>
 #include <QStringList>
 #include <QStandardPaths>
+#include <QProcessEnvironment>
 
 QString Downloader::check_package_manager() {
 	if (!QStandardPaths::findExecutable("pacman").isEmpty()){
@@ -189,6 +190,10 @@ void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
 	command_structure.append(list_to_be_downloaded);
 
 	qDebug() << "Executing: pkexec" << command_structure.join(" ");
+
+	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+	env.insert("DEBIAN_FRONTEND", "noninteractive");
+	download_process.setProcessEnvironment(env);
 
 	download_process.start("pkexec", command_structure);
 	download_process.waitForFinished(-1);
