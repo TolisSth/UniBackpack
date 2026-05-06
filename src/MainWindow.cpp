@@ -34,10 +34,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->listView->setModel(university_model);
     showing_universities = true;
 
-    // Initialize UI states
+
     ui->progressBar->setVisible(false);
     ui->statusLabel->setVisible(false);
     ui->outputView->setVisible(false);
+    ui->showMoreButton->setVisible(false);
 
     connect(ui->listView, &QListView::clicked, this, &MainWindow::on_university_selection);
     connect(ui->showMoreButton, &QPushButton::clicked, this, &MainWindow::toggle_output);
@@ -91,9 +92,9 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
         if (package_manager != "Unsupported") {
             QStringList packages_to_download = downloader->read_package_list(true, package_manager);
 
-            // 1. Prepare UI
+            ui->listView->setEnabled(false);
             ui->outputView->clear();
-            ui->progressBar->setMaximum(0); // Indeterminate busy state
+            ui->progressBar->setMaximum(0); 
             ui->progressBar->setValue(0);
             ui->progressBar->setVisible(true);
             ui->statusLabel->setText("Installing...");
@@ -101,14 +102,16 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
             ui->showMoreButton->setVisible(true);
 
             QCoreApplication::processEvents();
+            
             connect(downloader, &Downloader::status_message, ui->outputView, &QTextEdit::append);
 
             connect(downloader, &Downloader::download_completed, this, [=](bool success) {
-				ui->listView->setEnabled(true);
+                ui->listView->setEnabled(true); // Unlock UI
                 ui->progressBar->setMaximum(100);
                 ui->progressBar->setValue(100);
+                
                 if (success) {
-                    ui->statusLabel->setText("✓ Installation complete!");
+                    ui->statusLabel->setText("✓ Finished!");
                     ui->progressBar->setStyleSheet("QProgressBar::chunk { background-color: #4CAF50; }");
                 } else {
                     ui->statusLabel->setText("✗ Installation failed.");
