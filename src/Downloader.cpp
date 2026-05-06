@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QString> 
 #include <QProcess> 
+#include <QMessageBox>
 #include <QTextStream>
 #include <QStringList>
 #include <QStandardPaths>
