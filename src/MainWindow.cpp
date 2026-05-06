@@ -137,6 +137,11 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
                 downloader->deleteLater();
             }, Qt::UniqueConnection);
 
+            connect(downloader, &Downloader::progress_updated, this, [=](int percent) {
+                ui->progressBar->setMaximum(100);
+                ui->progressBar->setValue(percent);
+            });
+
             if (package_manager == "pacman") {
                 downloader->download_via_pacman(packages_to_download);
             } else if (package_manager == "apt") {

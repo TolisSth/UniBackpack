@@ -144,16 +144,30 @@ void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
 
     qDebug() << "Starting to download package list via pacman";
 
+    int total = list_to_be_downloaded.size();
+    int *installed = new int(0);
+
     QProcess *download_process = new QProcess(this);
 
     connect(download_process, &QProcess::readyReadStandardOutput, this, [=]() {
-        emit status_message(download_process->readAllStandardOutput());
+        QString output = download_process->readAllStandardOutput();
+        emit status_message(output);
+
+        // pacman prints "installing pkgname..." for each package
+        int count = output.count("installing ", Qt::CaseInsensitive);
+        count += output.count("upgrading ", Qt::CaseInsensitive);
+        if (count > 0) {
+            *installed += count;
+            int percent = static_cast<int>((*installed * 100.0) / total);
+            emit progress_updated(qMin(percent, 99));
+        }
     });
     connect(download_process, &QProcess::readyReadStandardError, this, [=]() {
         emit status_message(download_process->readAllStandardError());
     });
     connect(download_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [=](int exitCode, QProcess::ExitStatus) {
+        delete installed;
         if (exitCode == 0) {
             qDebug() << "Package list downloaded via pacman";
         } else {
