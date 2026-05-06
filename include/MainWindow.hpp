@@ -21,6 +21,7 @@ class MainWindow : public QMainWindow
 	
 	private slots: 
 		void on_university_selection(const QModelIndex &index);
+    	void toggle_output()
 
 	private:
     		Ui::MainWindow *ui;
@@ -29,6 +30,7 @@ class MainWindow : public QMainWindow
 		QStandardItemModel *department_model;
 
 		bool showing_universities;
+		bool output_visible = false;
 		QString current_university;
 };
 
