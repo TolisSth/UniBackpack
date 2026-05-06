@@ -6,40 +6,45 @@
 #include "Downloader.hpp"
 
 #include <QDebug>
-#include <QProcess>
 #include <QStandardItemModel>
 #include <QStandardItem>
 #include <QIcon>
 #include <QTextEdit>
+#include <QCoreApplication>
 
 MainWindow::MainWindow(QWidget *parent)
-	: QMainWindow(parent), ui(new Ui::MainWindow) {
-	
-	ui->setupUi(this);
+    : QMainWindow(parent), ui(new Ui::MainWindow) {
+    
+    ui->setupUi(this);
 
-	university_model = new QStandardItemModel(this);
-	department_model = new QStandardItemModel(this);
+    university_model = new QStandardItemModel(this);
+    department_model = new QStandardItemModel(this);
 
-	QList<QPair<QString, QString>> universities = {
-    	{"Aristotle University of Thessaloniki", ":/icons/auth_logo.png"},
-    	{"University of Western Macedonia",      ":/icons/uowm_logo.png"},
-    	{"University of Macedonia",              ":/icons/uom_logo.png"}
-	};
+    QList<QPair<QString, QString>> universities = {
+        {"Aristotle University of Thessaloniki", ":/icons/auth_logo.png"},
+        {"University of Western Macedonia",      ":/icons/uowm_logo.png"},
+        {"University of Macedonia",              ":/icons/uom_logo.png"}
+    };
 
-	for (const auto &[name, iconPath] : universities) {
-    	QStandardItem *item = new QStandardItem(QIcon(iconPath), name);
-    	university_model->appendRow(item);
-	}
+    for (const auto &[name, iconPath] : universities) {
+        QStandardItem *item = new QStandardItem(QIcon(iconPath), name);
+        university_model->appendRow(item);
+    }
 
-	ui->listView->setModel(university_model);
-	showing_universities = true;
+    ui->listView->setModel(university_model);
+    showing_universities = true;
 
-	connect(ui->listView, &QListView::clicked, this, &MainWindow::on_university_selection);
-	connect(ui->showMoreButton, &QPushButton::clicked, this, &MainWindow::toggle_output);
+    // Initialize UI states
+    ui->progressBar->setVisible(false);
+    ui->statusLabel->setVisible(false);
+    ui->outputView->setVisible(false);
+
+    connect(ui->listView, &QListView::clicked, this, &MainWindow::on_university_selection);
+    connect(ui->showMoreButton, &QPushButton::clicked, this, &MainWindow::toggle_output);
 }
 
 MainWindow::~MainWindow() {
-	delete ui;
+    delete ui;
 }
 
 void MainWindow::toggle_output() {
@@ -72,14 +77,13 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
         showing_universities = false; 
 
     } else {
-    	QString selectedDept = department_model->data(index, Qt::DisplayRole).toString();
+        QString selectedDept = department_model->data(index, Qt::DisplayRole).toString();
+        
         if (selectedDept == "Back to Universities") {
             ui->listView->setModel(university_model);
             showing_universities = true;
             return;
         }
-
-        qDebug() << "Installing for department: " << selectedDept;
 
         Downloader *downloader = new Downloader(current_university, selectedDept, this);
         QString package_manager = downloader->check_package_manager();
@@ -87,14 +91,16 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
         if (package_manager != "Unsupported") {
             QStringList packages_to_download = downloader->read_package_list(true, package_manager);
 
+            // 1. Prepare UI
             ui->outputView->clear();
-            ui->progressBar->setMaximum(0); 
+            ui->progressBar->setMaximum(0); // Indeterminate busy state
             ui->progressBar->setValue(0);
             ui->progressBar->setVisible(true);
             ui->statusLabel->setText("Installing...");
             ui->statusLabel->setVisible(true);
             ui->showMoreButton->setVisible(true);
 
+            QCoreApplication::processEvents();
             connect(downloader, &Downloader::status_message, ui->outputView, &QTextEdit::append);
 
             connect(downloader, &Downloader::download_completed, this, [=](bool success) {
@@ -107,9 +113,8 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
                     ui->statusLabel->setText("✗ Installation failed.");
                     ui->progressBar->setStyleSheet("QProgressBar::chunk { background-color: #f44336; }");
                 }
-                // Cleanup downloader after work is done
                 downloader->deleteLater();
-            });
+            }, Qt::UniqueConnection);
 
             if (package_manager == "pacman") {
                 downloader->download_via_pacman(packages_to_download);
@@ -117,7 +122,8 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
                 downloader->download_via_apt(packages_to_download);
             }
         } else {
-            qDebug() << "No supported package manager found.";
+            ui->statusLabel->setText("Error: Unsupported Package Manager");
+            ui->statusLabel->setVisible(true);
         }
     }
 }
