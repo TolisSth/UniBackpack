@@ -205,15 +205,16 @@ void Downloader::download_via_apt(const QStringList &list_to_be_downloaded) {
         emit status_message(download_process->readAllStandardError());
     });
     connect(download_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, [=](int exitCode, QProcess::ExitStatus) {
-        if (exitCode == 0) {
-            qDebug() << "Package list downloaded via apt";
-        } else {
-            qDebug() << "Error downloading packages via apt. Exit code:" << exitCode;
-        }
-        emit download_completed(exitCode == 0);
-        download_process->deleteLater();
-    });
+        this, [=](int exitCode, QProcess::ExitStatus status) {
+    qDebug() << "Process finished with exit code:" << exitCode << "status:" << status;
+    if (exitCode == 0) {
+        qDebug() << "Package list downloaded via apt";
+    } else {
+        qDebug() << "Error downloading packages via apt. Exit code:" << exitCode;
+    }
+    emit download_completed(exitCode == 0);
+    download_process->deleteLater();
+});
 
     QStringList command_structure;
     command_structure << "apt" << "install" << "-y"
