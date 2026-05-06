@@ -135,7 +135,7 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
                     ui->progressBar->setStyleSheet("QProgressBar::chunk { background-color: #f44336; }");
                 }
                 downloader->deleteLater();
-            }, Qt::UniqueConnection);
+            });
 
             connect(downloader, &Downloader::progress_updated, this, [=](int percent) {
                 ui->progressBar->setMaximum(100);
