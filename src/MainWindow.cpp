@@ -104,6 +104,7 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
             connect(downloader, &Downloader::status_message, ui->outputView, &QTextEdit::append);
 
             connect(downloader, &Downloader::download_completed, this, [=](bool success) {
+				ui->listView->setEnabled(true);
                 ui->progressBar->setMaximum(100);
                 ui->progressBar->setValue(100);
                 if (success) {
