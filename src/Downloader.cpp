@@ -160,15 +160,17 @@ void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
         QString output = download_process->readAllStandardOutput();
         emit status_message(output);
 
-        static QRegularExpression pacman_re(R"(\((\d+)/(\d+)\))");
-        QRegularExpressionMatch match = pacman_re.match(output);
-        if (match.hasMatch()) {
-            int current = match.captured(1).toInt();
-            int total = match.captured(2).toInt();
-            if (total > 0) {
-                int percent = static_cast<int>((current * 100.0) / total);
-                emit progress_updated(qMin(percent, 99));
-            }
+        static QRegularExpression download_re(R"(downloading (.+)\.\.\.)");
+        QRegularExpressionMatchIterator it = download_re.globalMatch(output);
+        int download_count = 0;
+        while (it.hasNext()) {
+            it.next();
+            download_count++;
+        }
+        if (download_count > 0) {
+            *downloaded += download_count;
+            int percent = static_cast<int>((*downloaded * 50.0) / total); // first 50% for downloads
+            emit progress_updated(qMin(percent, 49));
         }
     });
 
