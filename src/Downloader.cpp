@@ -154,12 +154,16 @@ void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
 
     qDebug() << "Starting to download package list via pacman";
 
+    int total = list_to_be_downloaded.size();
+    int *downloaded = new int(0);
+
     QProcess *download_process = new QProcess(this);
 
     connect(download_process, &QProcess::readyReadStandardOutput, this, [=]() {
         QString output = download_process->readAllStandardOutput();
         emit status_message(output);
 
+        // Download phase: "downloading pkgname..."
         static QRegularExpression download_re(R"(downloading (.+)\.\.\.)");
         QRegularExpressionMatchIterator it = download_re.globalMatch(output);
         int download_count = 0;
@@ -167,10 +171,22 @@ void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
             it.next();
             download_count++;
         }
-        if (download_count > 0) {
+        if (download_count > 0 && total > 0) {
             *downloaded += download_count;
-            int percent = static_cast<int>((*downloaded * 50.0) / total); // first 50% for downloads
+            int percent = static_cast<int>((*downloaded * 50.0) / total);
             emit progress_updated(qMin(percent, 49));
+        }
+
+        // Install phase: "(1/23) installing pkgname"
+        static QRegularExpression pacman_re(R"(\((\d+)/(\d+)\))");
+        QRegularExpressionMatch match = pacman_re.match(output);
+        if (match.hasMatch()) {
+            int current = match.captured(1).toInt();
+            int pkg_total = match.captured(2).toInt();
+            if (pkg_total > 0) {
+                int percent = 50 + static_cast<int>((current * 50.0) / pkg_total);
+                emit progress_updated(qMin(percent, 99));
+            }
         }
     });
 
@@ -180,6 +196,7 @@ void Downloader::download_via_pacman(const QStringList &list_to_be_downloaded) {
 
     connect(download_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [=](int exitCode, QProcess::ExitStatus status) {
+        delete downloaded;
         qDebug() << "Process finished with exit code:" << exitCode << "status:" << status;
         if (exitCode == 0) {
             qDebug() << "Package list downloaded via pacman";
