@@ -93,7 +93,7 @@ void MainWindow::on_university_selection(const QModelIndex &index) {
                 ui->outputView->append(msg);
 
             // Show package checking progress in status label
-            if (msg.startsWith("Found:") || msg.startsWith("Checking")) {
+            if (msg.startsWith("Adding") || msg.startsWith("Package")) {
                 ui->statusLabel->setText(msg.trimmed());
             }
 
