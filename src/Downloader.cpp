@@ -9,6 +9,7 @@
 #include <QStandardPaths>
 #include <QProcessEnvironment>
 #include <QRegularExpression>
+#include <QCoreApplication>
 
 QString Downloader::check_package_manager() {
     if (!QStandardPaths::findExecutable("pacman").isEmpty()) {
@@ -29,9 +30,11 @@ bool Downloader::is_in_pacman_repo(const QString &package_name) {
     process.waitForFinished();
     if (process.exitCode() == 0) {
         emit status_message("Found: " + package_name);
+        QCoreApplication::processEvents();
         return true;
     } else {
-        emit status_message("Not found: " + package_name);
+        emit status_message("Not in repos: " + package_name);
+        QCoreApplication::processEvents();
         return false;
     }
 }
@@ -42,9 +45,11 @@ bool Downloader::is_in_apt_repo(const QString &package_name) {
     process.waitForFinished();
     if (process.exitCode() == 0) {
         emit status_message("Found: " + package_name);
+        QCoreApplication::processEvents();
         return true;
     } else {
-        emit status_message("Not found: " + package_name);
+        emit status_message("Not in repos: " + package_name);
+        QCoreApplication::processEvents();
         return false;
     }
 }
