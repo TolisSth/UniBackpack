@@ -3,7 +3,6 @@
 
 #include <QDebug>
 #include <QFile>
-#include <QProcess>
 #include <QTextStream>
 #include <QMessageBox>
 #include <QStandardPaths>
