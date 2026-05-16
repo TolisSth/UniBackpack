@@ -7,7 +7,6 @@ build-essential
 dbeaver-ce
 default-jdk
 flex
-freecad
 gcc
 ghdl
 gnuplot
